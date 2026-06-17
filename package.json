@@ -6,7 +6,7 @@
   "author": "insd47",
   "repository": {
     "type": "git",
-    "url": "https://github.com/insd47/tauri-plugin-system-symbols.git"
+    "url": "git+https://github.com/insd47/tauri-plugin-system-symbols.git"
   },
   "packageManager": "pnpm@10.24.0",
   "type": "module",

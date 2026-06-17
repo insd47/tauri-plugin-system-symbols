@@ -106,6 +106,27 @@ cargo check
 cargo test
 ```
 
+## Publishing
+
+Publishing is handled by [`.github/workflows/publish.yml`](./.github/workflows/publish.yml).
+
+Create a tag to publish both packages:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow sets `package.json` and `Cargo.toml` versions from the tag, then publishes:
+
+- npm with `npm publish --provenance --access public`
+- crates.io with `rust-lang/crates-io-auth-action`
+
+Before the first trusted publish, configure trusted publishing in both registries:
+
+- npm: trust `insd47/tauri-plugin-system-symbols` and workflow `.github/workflows/publish.yml`
+- crates.io: trust `insd47/tauri-plugin-system-symbols` and workflow `.github/workflows/publish.yml`
+
 ## License
 
 MIT
