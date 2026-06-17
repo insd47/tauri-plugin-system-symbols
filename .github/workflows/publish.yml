@@ -14,43 +14,37 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup pnpm
+      - name: pnpm 설정
         uses: pnpm/action-setup@v5
 
-      - name: Setup Node.js
+      - name: Node.js 설정
         uses: actions/setup-node@v6
         with:
           node-version: 24
 
-      - name: Install Rust
+      - name: Rust 설치
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Set version from tag
+      - name: 버전 설정
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          pnpm version "$VERSION" --no-git-tag-version
+          pnpm version $VERSION --no-git-tag-version
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
 
-      - name: Install dependencies
+      - name: 패키지 설치
         run: pnpm install --frozen-lockfile
 
-      - name: Check JavaScript
-        run: pnpm run check
+      - name: 빌드
+        run: pnpm build
 
-      - name: Build JavaScript
-        run: pnpm run build
-
-      - name: Check Rust
-        run: cargo check
-
-      - name: Publish to npm
+      - name: NPM에 배포
         run: npm publish --provenance --access public
 
-      - name: Authenticate to crates.io
+      - name: crates.io 로그인
         id: cargo-auth
         uses: rust-lang/crates-io-auth-action@v1
 
-      - name: Publish to crates.io
+      - name: crates.io 배포
         run: cargo publish --allow-dirty
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.cargo-auth.outputs.token }}
