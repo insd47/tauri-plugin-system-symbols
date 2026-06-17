@@ -12,14 +12,7 @@ categories = ["gui", "api-bindings"]
 repository = "https://github.com/insd47/tauri-plugin-system-symbols"
 homepage = "https://github.com/insd47/tauri-plugin-system-symbols"
 links = "tauri-plugin-system-symbols"
-include = [
-    "/Cargo.toml",
-    "/LICENSE",
-    "/README.md",
-    "/build.rs",
-    "/permissions/**",
-    "/src/**",
-]
+include = ["/Cargo.toml", "/LICENSE", "/README.md", "/build.rs", "/permissions/**", "/src/**"]
 
 [dependencies]
 tauri = { version = "2.11.2" }

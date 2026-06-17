@@ -1,0 +1,22 @@
+# Rust crate sources and Tauri permission metadata
+/src
+/permissions
+/build.rs
+/Cargo.toml
+/Cargo.lock
+/target
+
+# TypeScript source and local build tooling
+/guest-js
+/rollup.config.mjs
+/tsconfig.json
+/pnpm-lock.yaml
+/.prettierrc
+
+# Local/editor state
+/.idea
+/.git
+/.github
+/.DS_Store
+/node_modules
+/package-lock.json
