@@ -1,0 +1,35 @@
+[package]
+name = "tauri-plugin-system-symbols"
+version = "0.1.0"
+authors = ["insd47"]
+description = "System symbol SVG paths for Tauri apps."
+edition = "2021"
+rust-version = "1.77.2"
+license = "MIT"
+readme = "README.md"
+keywords = ["tauri", "symbols", "icons", "sf-symbols", "segoe"]
+categories = ["gui", "api-bindings"]
+repository = "https://github.com/insd47/tauri-plugin-system-symbols"
+homepage = "https://github.com/insd47/tauri-plugin-system-symbols"
+links = "tauri-plugin-system-symbols"
+include = [
+    "/Cargo.toml",
+    "/LICENSE",
+    "/README.md",
+    "/build.rs",
+    "/permissions/**",
+    "/src/**",
+]
+
+[dependencies]
+tauri = { version = "2.11.2" }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = ["Win32_Graphics_DirectWrite", "Win32_Graphics_Direct2D_Common"] }
+windows-core = "0.62.2"
+windows-numerics = "0.3.1"
+
+[build-dependencies]
+tauri-plugin = { version = "2.6.2", features = ["build"] }

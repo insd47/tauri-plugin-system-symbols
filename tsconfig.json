@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "dist-js",
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist-js",
+    "rootDir": "guest-js",
+    "strict": true,
+    "target": "ES2022"
+  },
+  "include": ["guest-js/**/*.ts"]
+}

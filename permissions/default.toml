@@ -1,0 +1,6 @@
+[default]
+description = "Default permissions for system symbol lookup."
+permissions = [
+  "allow-get-symbol",
+  "allow-get-symbols",
+]
