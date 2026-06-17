@@ -1,6 +1,5 @@
 [default]
 description = "Default permissions for system symbol lookup."
 permissions = [
-  "allow-get-fluent-icons",
-  "allow-get-sf-symbols",
+  "allow-get-symbol",
 ]

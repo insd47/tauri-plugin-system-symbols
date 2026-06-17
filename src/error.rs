@@ -1,4 +1,5 @@
 use serde::{ser::Serializer, Serialize};
+use std::num::ParseIntError;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -11,6 +12,11 @@ pub enum Error {
         system: &'static str,
         platform: &'static str,
     },
+    #[error(transparent)]
+    ParseInt(#[from] ParseIntError),
+    #[cfg(windows)]
+    #[error(transparent)]
+    Windows(#[from] windows_core::Error),
     #[error("{0}")]
     Symbol(String),
 }

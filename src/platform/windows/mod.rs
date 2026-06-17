@@ -2,20 +2,17 @@ mod font;
 mod outline;
 mod path;
 
-use crate::{
-    models::{SvgPath, SvgSymbol},
-    Error,
-};
+use crate::models::{Path, Symbol};
 
-pub(crate) fn fluent(icon: &str) -> crate::Result<SvgSymbol> {
+pub(crate) fn resolve(icon: &str, size: f32) -> crate::Result<Symbol> {
     let codepoint = parse_codepoint(icon)?;
     let (face, glyph_index) = font::resolve(codepoint)?;
-    let segments = outline::extract(&face, glyph_index)?;
-    let d = path::to_path(&segments);
+    let segments = outline::extract(&face, glyph_index, size)?;
+    let d = path::to_path(&segments, size);
 
-    Ok(SvgSymbol {
-        view_box: format!("0 0 {0} {0}", path::VIEW),
-        paths: vec![SvgPath {
+    Ok(Symbol {
+        view_box: format!("0 0 {0} {0}", size),
+        paths: vec![Path {
             d,
             fill_rule: None,
             opacity: None,
@@ -36,8 +33,7 @@ fn parse_codepoint(symbol: &str) -> crate::Result<u32> {
         .or_else(|| symbol.strip_prefix("0X"))
         .unwrap_or(symbol);
 
-    u32::from_str_radix(hex, 16)
-        .map_err(|_| Error::InvalidRequest(format!("invalid Windows symbol codepoint `{symbol}`")))
+    Ok(u32::from_str_radix(hex, 16)?)
 }
 
 fn single_character(symbol: &str) -> Option<char> {

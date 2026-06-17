@@ -24,5 +24,11 @@ windows = { version = "0.62.2", features = ["Win32_Graphics_DirectWrite", "Win32
 windows-core = "0.62.2"
 windows-numerics = "0.3.1"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+dispatch2 = { version = "0.3.1", default-features = false, features = ["std"] }
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSBezierPath", "NSImage", "NSImageRep"] }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["NSArray", "NSGeometry", "NSObject", "NSString", "std"] }
+
 [build-dependencies]
 tauri-plugin = { version = "2.6.2", features = ["build"] }

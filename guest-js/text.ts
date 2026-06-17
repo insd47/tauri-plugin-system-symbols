@@ -3,7 +3,3 @@ export function assert(value: string, name: string): void {
     throw new Error(`${name} must not be empty`)
   }
 }
-
-export function unique(values: string[]): string[] {
-  return [...new Set(values)]
-}

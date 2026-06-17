@@ -12,9 +12,7 @@ use windows::{
 };
 use windows_numerics::Vector2;
 
-use crate::{Error, Result};
-
-const EM: f32 = 1000.0;
+use crate::Result;
 
 pub(super) enum Segment {
     Move(f32, f32),
@@ -23,7 +21,7 @@ pub(super) enum Segment {
     Close,
 }
 
-pub(super) fn extract(face: &IDWriteFontFace, glyph_index: u16) -> Result<Vec<Segment>> {
+pub(super) fn extract(face: &IDWriteFontFace, glyph_index: u16, size: f32) -> Result<Vec<Segment>> {
     let segments = Rc::new(RefCell::new(Vec::new()));
     let sink: ID2D1SimplifiedGeometrySink = PathSink {
         segments: segments.clone(),
@@ -31,8 +29,7 @@ pub(super) fn extract(face: &IDWriteFontFace, glyph_index: u16) -> Result<Vec<Se
     .into();
 
     unsafe {
-        face.GetGlyphRunOutline(EM, &glyph_index, None, None, 1, false, false, &sink)
-            .map_err(|error| Error::Symbol(error.to_string()))?;
+        face.GetGlyphRunOutline(size, &glyph_index, None, None, 1, false, false, &sink)?;
     }
 
     Ok(segments.take())

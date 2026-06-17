@@ -2,18 +2,16 @@ use std::fmt::Write;
 
 use super::outline::Segment;
 
-pub(super) const VIEW: f32 = 100.0;
-
-pub(super) fn to_path(segments: &[Segment]) -> String {
+pub(super) fn to_path(segments: &[Segment], size: f32) -> String {
     let Some((min_x, min_y, max_x, max_y)) = bounds(segments) else {
         return String::new();
     };
 
     let width = (max_x - min_x).max(f32::EPSILON);
     let height = (max_y - min_y).max(f32::EPSILON);
-    let scale = VIEW / width.max(height);
-    let offset_x = (VIEW - width * scale) / 2.0;
-    let offset_y = (VIEW - height * scale) / 2.0;
+    let scale = size / width.max(height);
+    let offset_x = (size - width * scale) / 2.0;
+    let offset_y = (size - height * scale) / 2.0;
 
     let map_x = |x: f32| (x - min_x) * scale + offset_x;
     let map_y = |y: f32| (y - min_y) * scale + offset_y;
@@ -78,7 +76,7 @@ mod tests {
 
     #[test]
     fn empty_outline_is_blank() {
-        assert!(to_path(&[]).is_empty());
+        assert!(to_path(&[], 16.0).is_empty());
     }
 
     #[test]
@@ -89,6 +87,6 @@ mod tests {
             Segment::Line(20.0, 20.0),
             Segment::Close,
         ];
-        assert_eq!(to_path(&segments), "M0.00 0.00L100.00 0.00L100.00 100.00Z");
+        assert_eq!(to_path(&segments, 16.0), "M0.00 0.00L16.00 0.00L16.00 16.00Z");
     }
 }

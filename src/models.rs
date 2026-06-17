@@ -1,21 +1,15 @@
 use serde::Serialize;
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum SymbolRequest {
-    Fluent(String),
-    Sf(String),
-}
-
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SvgSymbol {
+pub struct Symbol {
     pub view_box: String,
-    pub paths: Vec<SvgPath>,
+    pub paths: Vec<Path>,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SvgPath {
+pub struct Path {
     pub d: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fill_rule: Option<FillRule>,

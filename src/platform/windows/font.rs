@@ -14,13 +14,10 @@ const FAMILIES: [&str; 2] = ["Segoe Fluent Icons", "Segoe MDL2 Assets"];
 
 pub(super) fn resolve(codepoint: u32) -> Result<(IDWriteFontFace, u16)> {
     unsafe {
-        let factory: IDWriteFactory =
-            DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED).map_err(win_err)?;
+        let factory: IDWriteFactory = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED)?;
 
         let mut collection: Option<IDWriteFontCollection> = None;
-        factory
-            .GetSystemFontCollection(&mut collection, false)
-            .map_err(win_err)?;
+        factory.GetSystemFontCollection(&mut collection, false)?;
         let collection =
             collection.ok_or_else(|| Error::Symbol("system font collection unavailable".into()))?;
 
@@ -30,8 +27,7 @@ pub(super) fn resolve(codepoint: u32) -> Result<(IDWriteFontFace, u16)> {
             };
 
             let mut index: u16 = 0;
-            face.GetGlyphIndices(&codepoint, 1, &mut index)
-                .map_err(win_err)?;
+            face.GetGlyphIndices(&codepoint, 1, &mut index)?;
 
             if index != 0 {
                 return Ok((face, index));
@@ -52,26 +48,18 @@ unsafe fn create_face(
     let mut index = 0u32;
     let mut exists = BOOL(0);
 
-    collection
-        .FindFamilyName(PCWSTR(name.as_ptr()), &mut index, &mut exists)
-        .map_err(win_err)?;
+    collection.FindFamilyName(PCWSTR(name.as_ptr()), &mut index, &mut exists)?;
 
     if !exists.as_bool() {
         return Ok(None);
     }
 
-    let family = collection.GetFontFamily(index).map_err(win_err)?;
-    let font = family
-        .GetFirstMatchingFont(
-            DWRITE_FONT_WEIGHT_NORMAL,
-            DWRITE_FONT_STRETCH_NORMAL,
-            DWRITE_FONT_STYLE_NORMAL,
-        )
-        .map_err(win_err)?;
+    let family = collection.GetFontFamily(index)?;
+    let font = family.GetFirstMatchingFont(
+        DWRITE_FONT_WEIGHT_NORMAL,
+        DWRITE_FONT_STRETCH_NORMAL,
+        DWRITE_FONT_STYLE_NORMAL,
+    )?;
 
-    Ok(Some(font.CreateFontFace().map_err(win_err)?))
-}
-
-fn win_err(error: windows::core::Error) -> Error {
-    Error::Symbol(error.to_string())
+    Ok(Some(font.CreateFontFace()?))
 }
