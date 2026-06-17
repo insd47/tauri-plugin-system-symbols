@@ -6,21 +6,24 @@ use crate::{
 };
 
 #[command]
-pub(crate) async fn get_symbol(
+pub(crate) async fn get_fluent_icons(
     cache: State<'_, SymbolCache>,
-    request: SymbolRequest,
-) -> crate::Result<SvgSymbol> {
-    resolve_with_cache(&cache, request)
+    icons: Vec<String>,
+) -> crate::Result<Vec<SvgSymbol>> {
+    icons
+        .into_iter()
+        .map(|icon| resolve_with_cache(&cache, SymbolRequest::Fluent(icon)))
+        .collect()
 }
 
 #[command]
-pub(crate) async fn get_symbols(
+pub(crate) async fn get_sf_symbols(
     cache: State<'_, SymbolCache>,
-    requests: Vec<SymbolRequest>,
+    symbols: Vec<String>,
 ) -> crate::Result<Vec<SvgSymbol>> {
-    requests
+    symbols
         .into_iter()
-        .map(|request| resolve_with_cache(&cache, request))
+        .map(|symbol| resolve_with_cache(&cache, SymbolRequest::Sf(symbol)))
         .collect()
 }
 

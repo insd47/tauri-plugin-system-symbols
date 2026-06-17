@@ -1,15 +1,16 @@
 use serde::{ser::Serializer, Serialize};
 
-use crate::models::SymbolFamily;
-
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("invalid symbol request: {0}")]
     InvalidRequest(String),
-    #[error("{family} is not supported on this platform yet")]
-    UnsupportedPlatform { family: SymbolFamily },
+    #[error("{system} is not supported on {platform}")]
+    UnsupportedPlatform {
+        system: &'static str,
+        platform: &'static str,
+    },
     #[error("{0}")]
     Symbol(String),
 }

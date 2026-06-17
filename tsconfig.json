@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "dist-js",
-    "emitDeclarationOnly": false,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["ES2022", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "outDir": "dist-js",
     "rootDir": "guest-js",
+    "skipLibCheck": true,
     "strict": true,
     "target": "ES2022"
   },

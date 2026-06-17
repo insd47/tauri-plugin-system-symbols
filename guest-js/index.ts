@@ -1,119 +1,116 @@
-import { invoke } from '@tauri-apps/api/core'
+import type { Symbol } from './types';
 
-const COMMAND_PREFIX = 'plugin:system-symbols|'
+import * as cache from './cache';
+import * as commands from './commands';
+import * as key from './key';
+import * as text from './text';
 
-export type SymbolFamily =
-  | 'auto'
-  | 'sfSymbols'
-  | 'segoeFluentIcons'
-  | 'segoeMdl2Assets'
-
-export interface SymbolRequest {
-  family?: SymbolFamily
-  symbol: string
+/**
+ * Resolves a Windows Segoe Fluent Icons glyph to SVG path data.
+ *
+ * `Segoe Fluent Icons` is preferred by the Rust backend, with
+ * `Segoe MDL2 Assets` used as the fallback font. Calling this on a non-Windows
+ * platform rejects with the backend platform error.
+ *
+ * @param icon Glyph text or codepoint, for example `"\uE8BB"` or `"U+E8BB"`.
+ * @returns SVG path data and viewBox metadata for the icon.
+ */
+export function getFluentIcon(icon: string): Promise<Symbol> {
+  text.assert(icon, 'icon');
+  return cache.load(key.fluent(icon), async () => {
+    const [symbol] = await commands.fluent([icon]);
+    return symbol;
+  });
 }
 
-export interface SvgSymbol {
-  family: SymbolFamily
-  symbol: string
-  path: string
-  viewBox: string
+/**
+ * Returns a previously resolved Windows Fluent icon without starting IPC.
+ *
+ * @param icon Glyph text or codepoint used to resolve the icon.
+ * @returns Cached SVG data, or `undefined` when the icon has not been loaded.
+ */
+export function getCachedFluentIcon(icon: string): Symbol | undefined {
+  text.assert(icon, 'icon');
+  return cache.get(key.fluent(icon));
 }
 
-const cache = new Map<string, Promise<SvgSymbol>>()
+/**
+ * Preloads Windows Fluent icons in one backend request.
+ *
+ * @param icons Glyph texts or codepoints to preload.
+ */
+export async function preloadFluentIcons(...icons: string[]): Promise<void> {
+  const unique = text.unique(icons);
+  unique.forEach((icon) => text.assert(icon, 'icon'));
 
-export async function getSymbol(request: SymbolRequest): Promise<SvgSymbol> {
-  const normalized = normalizeRequest(request)
-  const key = cacheKey(normalized)
-  const cached = cache.get(key)
-  if (cached) {
-    return cached
+  const missing = unique.filter((icon) => !cache.get(key.fluent(icon)));
+  if (missing.length === 0) {
+    return;
   }
 
-  const pending = invoke<SvgSymbol>(`${COMMAND_PREFIX}get_symbol`, {
-    request: normalized
-  }).catch((error) => {
-    cache.delete(key)
-    throw error
-  })
-
-  cache.set(key, pending)
-  return pending
+  const symbols = await commands.fluent(missing);
+  cache.save(
+    symbols,
+    missing.map((icon) => key.fluent(icon)),
+  );
 }
 
-export async function getSymbols(
-  requests: SymbolRequest[]
-): Promise<SvgSymbol[]> {
-  const normalized = requests.map(normalizeRequest)
-  const missing: Required<SymbolRequest>[] = []
-
-  for (const request of normalized) {
-    if (!cache.has(cacheKey(request))) {
-      missing.push(request)
-    }
-  }
-
-  if (missing.length > 0) {
-    const uniqueMissing = uniqueRequests(missing)
-    const pending = invoke<SvgSymbol[]>(`${COMMAND_PREFIX}get_symbols`, {
-      requests: uniqueMissing
-    })
-
-    uniqueMissing.forEach((request, index) => {
-      const key = cacheKey(request)
-      cache.set(
-        key,
-        pending.then((symbols) => symbols[index])
-      )
-    })
-
-    try {
-      await pending
-    } catch (error) {
-      for (const request of uniqueMissing) {
-        cache.delete(cacheKey(request))
-      }
-      throw error
-    }
-  }
-
-  return Promise.all(normalized.map((request) => getSymbol(request)))
+/**
+ * Resolves a macOS SF Symbol name to SVG path data.
+ *
+ * Calling this on a non-macOS platform rejects with the backend platform error.
+ *
+ * @param symbol SF Symbols name, for example `"square.and.arrow.up"`.
+ * @returns SVG path data and viewBox metadata for the symbol.
+ */
+export function getSfSymbol(symbol: string): Promise<Symbol> {
+  text.assert(symbol, 'symbol');
+  return cache.load(key.sf(symbol), async () => {
+    const [icon] = await commands.sf([symbol]);
+    return icon;
+  });
 }
 
+/**
+ * Returns a previously resolved SF Symbol without starting IPC.
+ *
+ * @param symbol SF Symbols name used to resolve the symbol.
+ * @returns Cached SVG data, or `undefined` when the symbol has not been loaded.
+ */
+export function getCachedSfSymbol(symbol: string): Symbol | undefined {
+  text.assert(symbol, 'symbol');
+  return cache.get(key.sf(symbol));
+}
+
+/**
+ * Preloads macOS SF Symbols in one backend request.
+ *
+ * @param symbols SF Symbols names to preload.
+ */
+export async function preloadSfSymbols(...symbols: string[]): Promise<void> {
+  const unique = text.unique(symbols);
+  unique.forEach((symbol) => text.assert(symbol, 'symbol'));
+
+  const missing = unique.filter((symbol) => !cache.get(key.sf(symbol)));
+  if (missing.length === 0) {
+    return;
+  }
+
+  const icons = await commands.sf(missing);
+  cache.save(
+    icons,
+    missing.map((symbol) => key.sf(symbol)),
+  );
+}
+
+/**
+ * Clears the in-memory JavaScript symbol cache.
+ *
+ * This only affects frontend-side caching. The Rust backend keeps its own
+ * process-local cache.
+ */
 export function clearSymbolCache(): void {
-  cache.clear()
+  cache.clear();
 }
 
-function normalizeRequest(request: SymbolRequest): Required<SymbolRequest> {
-  if (request.symbol.trim().length === 0) {
-    throw new Error('symbol must not be empty')
-  }
-
-  return {
-    family: request.family ?? 'auto',
-    symbol: request.symbol
-  }
-}
-
-function uniqueRequests(
-  requests: Required<SymbolRequest>[]
-): Required<SymbolRequest>[] {
-  const seen = new Set<string>()
-  const unique: Required<SymbolRequest>[] = []
-
-  for (const request of requests) {
-    const key = cacheKey(request)
-    if (seen.has(key)) {
-      continue
-    }
-
-    seen.add(key)
-    unique.push(request)
-  }
-
-  return unique
-}
-
-function cacheKey(request: Required<SymbolRequest>): string {
-  return `${request.family}:${request.symbol}`
-}
+export type { Path, Symbol } from './types';

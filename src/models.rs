@@ -1,47 +1,31 @@
-use std::fmt;
+use serde::Serialize;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum SymbolFamily {
-    Auto,
-    SfSymbols,
-    SegoeFluentIcons,
-    SegoeMdl2Assets,
-}
-
-impl Default for SymbolFamily {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
-
-impl fmt::Display for SymbolFamily {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            Self::Auto => "auto",
-            Self::SfSymbols => "SF Symbols",
-            Self::SegoeFluentIcons => "Segoe Fluent Icons",
-            Self::SegoeMdl2Assets => "Segoe MDL2 Assets",
-        };
-        formatter.write_str(value)
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SymbolRequest {
-    #[serde(default)]
-    pub family: SymbolFamily,
-    pub symbol: String,
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub(crate) enum SymbolRequest {
+    Fluent(String),
+    Sf(String),
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SvgSymbol {
-    pub family: SymbolFamily,
-    pub symbol: String,
-    pub path: String,
     pub view_box: String,
+    pub paths: Vec<SvgPath>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SvgPath {
+    pub d: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill_rule: Option<FillRule>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opacity: Option<f32>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FillRule {
+    Nonzero,
+    Evenodd,
 }

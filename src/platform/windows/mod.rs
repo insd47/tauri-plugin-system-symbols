@@ -3,21 +3,23 @@ mod outline;
 mod path;
 
 use crate::{
-    models::{SvgSymbol, SymbolRequest},
+    models::{SvgPath, SvgSymbol},
     Error,
 };
 
-pub(crate) fn resolve(request: &SymbolRequest) -> crate::Result<SvgSymbol> {
-    let codepoint = parse_codepoint(&request.symbol)?;
-    let (family, face, glyph_index) = font::resolve(&request.family, codepoint)?;
+pub(crate) fn fluent(icon: &str) -> crate::Result<SvgSymbol> {
+    let codepoint = parse_codepoint(icon)?;
+    let (face, glyph_index) = font::resolve(codepoint)?;
     let segments = outline::extract(&face, glyph_index)?;
-    let path = path::to_path(&segments);
+    let d = path::to_path(&segments);
 
     Ok(SvgSymbol {
-        family,
-        symbol: request.symbol.clone(),
-        path,
         view_box: format!("0 0 {0} {0}", path::VIEW),
+        paths: vec![SvgPath {
+            d,
+            fill_rule: None,
+            opacity: None,
+        }],
     })
 }
 

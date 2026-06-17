@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-fluent-icons"
+description = "Enables the get_fluent_icons command without any pre-configured scope."
+commands.allow = ["get_fluent_icons"]
+
+[[permission]]
+identifier = "deny-get-fluent-icons"
+description = "Denies the get_fluent_icons command without any pre-configured scope."
+commands.deny = ["get_fluent_icons"]

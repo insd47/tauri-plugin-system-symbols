@@ -3,22 +3,31 @@
 ## Assumptions
 
 - This repository owns the Tauri plugin crate and the generic JavaScript NPM package named `tauri-plugin-system-symbols`.
-- `tauri-plugin-system-symbols-react` should be a separate repository. It will depend on the generic JavaScript package and expose React components/hooks only.
+- `tauri-plugin-system-symbols-react` lives in a separate Git repository at `/Users/insd47/Developer/insd/tauri-plugin-system-symbols-react`.
 - The plugin targets Tauri v2 and follows the current permission/capability model.
 - Symbol geometry is returned as SVG path data plus a fixed `viewBox`; frontend packages own rendering and styling.
 
-## Current Boilerplate
+## Current API
 
-1. Rust plugin entrypoint registers `system-symbols` with two commands:
-   - `get_symbol`
-   - `get_symbols`
-2. `build.rs` generates Tauri permission metadata for those commands.
-3. `permissions/default.toml` exposes `system-symbols:default`.
-4. `guest-js/index.ts` exposes framework-neutral bindings with in-memory caching.
-5. Windows Segoe extraction is shaped after `insd47/tauri-plugin-window-controls`:
-   - font family resolution
-   - DirectWrite outline extraction
-   - SVG path normalization
+Rust plugin commands:
+
+- `get_fluent_icons(icons)`
+- `get_sf_symbols(symbols)`
+
+JavaScript API:
+
+- `getFluentIcon(icon)`
+- `getSfSymbol(symbol)`
+- `getCachedFluentIcon(icon)`
+- `getCachedSfSymbol(symbol)`
+- `preloadFluentIcons(...icons)`
+- `preloadSfSymbols(...symbols)`
+
+React API:
+
+- `<SfSymbol symbol="square.and.arrow.up" />`
+- `<FluentIcon icon={"\uE8BB"} />`
+- `<SystemSymbol symbol="square.and.arrow.up" icon={"\uE8BB"} />`
 
 ## Backend Design
 
@@ -26,39 +35,47 @@
 
 - Windows:
   - Use DirectWrite system font collection.
-  - Resolve `Segoe Fluent Icons` first, then `Segoe MDL2 Assets` for `family: "auto"`.
+  - Resolve `Segoe Fluent Icons` first, then `Segoe MDL2 Assets`.
   - Accept a single glyph character, `U+E921`, `0xE921`, or raw hex such as `E921`.
-  - Cache resolved `SymbolRequest -> SvgSymbol` at the Tauri state layer.
+  - Return one or more SVG paths in a `Symbol`.
 - macOS:
+  - Keep the command and platform boundary in place.
   - Resolve SF Symbols by symbol name.
-  - Prefer system APIs that produce vector data directly.
-  - Keep symbol configuration explicit later: weight, scale, variable value, and rendering mode should not be added until needed by a caller.
-- Unsupported platforms:
-  - Return a typed plugin error instead of silently substituting bundled icons.
+  - Implement vector extraction behind `platform/macos.rs` without changing the JS or React API.
+- Wrong platform:
+  - Return a typed Rust backend error.
+
+## Shape
+
+The public return type is multi-path from the start:
+
+```ts
+interface Symbol {
+  viewBox: string
+  paths: Path[]
+}
+```
+
+Windows glyphs usually return one path. SF Symbols can later return layered
+paths without changing the frontend API.
 
 ## Performance Plan
 
-- Keep `get_symbols` as the preferred public path for UI startup and icon-heavy screens.
-- Keep `get_symbol` as a convenience wrapper for low-volume calls.
+- Keep one command per symbol family instead of a generic auto resolver.
 - Cache on both sides:
   - Rust cache avoids repeated font lookup/outline extraction.
   - JS cache avoids repeated Tauri IPC calls from component rerenders.
-- Add backend-level font face caching when real Windows/macOS extraction work expands beyond the current scaffold.
-- Do not ship full icon maps in the first version. Add optional generated metadata only if name-to-codepoint lookup becomes necessary.
+- Add backend-level font face caching when extraction work expands beyond the current scaffold.
+- Avoid shipping full icon maps until name-to-codepoint lookup becomes necessary.
 
 ## React Package Strategy
 
-Create `insd47/tauri-plugin-system-symbols-react` separately.
+The React package is intentionally thin:
 
-Initial API should be thin:
-
-- `<SystemSymbol symbol="xmark" />`
-- `useSystemSymbol(request)`
-- `SystemSymbolsProvider` only if shared configuration becomes necessary.
-
-The React package should not call Tauri commands directly. It should depend on
-`tauri-plugin-system-symbols`, so non-React consumers and React consumers share
-the same cache and request semantics.
+- It depends on `tauri-plugin-system-symbols` for symbol loading.
+- It depends on `@tauri-apps/plugin-os` for `platform()` in `SystemSymbol`.
+- It does not call Tauri commands directly.
+- It extends `SVGProps<SVGSVGElement>` and uses `cn` for class composition.
 
 ## Migration Plan For window-controls
 
@@ -72,9 +89,12 @@ Once this plugin has stable Windows extraction:
 
 ## Verification Criteria
 
+- `cargo fmt --check` passes.
 - `cargo check` passes on the host platform.
-- `npm run check` passes for guest bindings.
-- `npm run build` produces `dist-js/index.js`, `dist-js/index.cjs`, and `dist-js/index.d.ts`.
+- `cargo test` passes on the host platform.
+- `npm run check` passes for the core JavaScript package.
+- `npm run build` passes for the core JavaScript package.
+- React package `npm run check` and `npm run build` pass.
 - Later Windows validation must include real glyph path extraction for `U+E921`, `U+E922`, `U+E923`, and `U+E8BB`.
 
 ## References

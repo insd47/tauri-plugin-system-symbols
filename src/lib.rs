@@ -15,14 +15,14 @@ mod models;
 mod platform;
 
 pub use error::{Error, Result};
-pub use models::{SvgSymbol, SymbolFamily, SymbolRequest};
+pub use models::{FillRule, SvgPath, SvgSymbol};
 
 /// Initializes the plugin. Register it with `tauri::Builder::plugin(init())`.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("system-symbols")
         .invoke_handler(tauri::generate_handler![
-            commands::get_symbol,
-            commands::get_symbols
+            commands::get_fluent_icons,
+            commands::get_sf_symbols
         ])
         .setup(|app, _api| {
             app.manage(cache::SymbolCache::default());

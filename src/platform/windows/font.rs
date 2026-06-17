@@ -8,28 +8,11 @@ use windows::{
 };
 use windows_core::BOOL;
 
-use crate::{models::SymbolFamily, Error, Result};
+use crate::{Error, Result};
 
-const FAMILIES: [(SymbolFamily, &str); 2] = [
-    (SymbolFamily::SegoeFluentIcons, "Segoe Fluent Icons"),
-    (SymbolFamily::SegoeMdl2Assets, "Segoe MDL2 Assets"),
-];
+const FAMILIES: [&str; 2] = ["Segoe Fluent Icons", "Segoe MDL2 Assets"];
 
-pub(super) fn resolve(
-    family: &SymbolFamily,
-    codepoint: u32,
-) -> Result<(SymbolFamily, IDWriteFontFace, u16)> {
-    let candidates: Vec<(SymbolFamily, &str)> = match family {
-        SymbolFamily::Auto => FAMILIES.to_vec(),
-        SymbolFamily::SegoeFluentIcons => vec![FAMILIES[0].clone()],
-        SymbolFamily::SegoeMdl2Assets => vec![FAMILIES[1].clone()],
-        SymbolFamily::SfSymbols => {
-            return Err(Error::UnsupportedPlatform {
-                family: SymbolFamily::SfSymbols,
-            });
-        }
-    };
-
+pub(super) fn resolve(codepoint: u32) -> Result<(IDWriteFontFace, u16)> {
     unsafe {
         let factory: IDWriteFactory =
             DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED).map_err(win_err)?;
@@ -41,7 +24,7 @@ pub(super) fn resolve(
         let collection =
             collection.ok_or_else(|| Error::Symbol("system font collection unavailable".into()))?;
 
-        for (family, font_name) in candidates {
+        for font_name in FAMILIES {
             let Some(face) = create_face(&collection, font_name)? else {
                 continue;
             };
@@ -51,7 +34,7 @@ pub(super) fn resolve(
                 .map_err(win_err)?;
 
             if index != 0 {
-                return Ok((family, face, index));
+                return Ok((face, index));
             }
         }
     }

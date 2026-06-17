@@ -1,16 +1,15 @@
 # tauri-plugin-system-symbols
 
-Tauri plugin for resolving system icon glyphs into SVG path data.
+Tauri plugin for resolving platform system symbols into SVG path data.
 
 ## Packages
 
 - Rust crate: `tauri-plugin-system-symbols`
 - Generic JavaScript package: `tauri-plugin-system-symbols`
-- Planned React package: `tauri-plugin-system-symbols-react`
+- React package: `tauri-plugin-system-symbols-react`
 
-The generic JavaScript package lives in this repository. The React package should
-be developed in a separate repository so React release cadence, peer dependency
-policy, and component APIs can evolve without coupling to the core Tauri plugin.
+The React package is developed in a separate repository at
+`/Users/insd47/Developer/insd/tauri-plugin-system-symbols-react`.
 
 ## Install
 
@@ -36,27 +35,26 @@ Add the default permission to your capability file:
 ## JavaScript Usage
 
 ```ts
-import { getSymbol, getSymbols } from 'tauri-plugin-system-symbols'
+import { getFluentIcon, getSfSymbol } from 'tauri-plugin-system-symbols'
 
-const close = await getSymbol({
-  family: 'segoeFluentIcons',
-  symbol: 'U+E8BB'
-})
-
-const icons = await getSymbols([
-  { family: 'segoeFluentIcons', symbol: 'U+E921' },
-  { family: 'segoeFluentIcons', symbol: 'U+E8BB' }
-])
+const close = await getFluentIcon('\uE8BB')
+const share = await getSfSymbol('square.and.arrow.up')
 ```
+
+`getFluentIcon` is Windows-only. The backend resolves `Segoe Fluent Icons`
+first and falls back to `Segoe MDL2 Assets`.
+
+`getSfSymbol` is macOS-only. Calling either API on the wrong platform rejects
+with a Rust backend error.
+
+Tauri IPC is asynchronous, so the JavaScript API returns `Promise<Symbol>`.
+Repeated requests are cached in both JavaScript and Rust.
 
 ## Current Backend Status
 
 - Windows: DirectWrite-based Segoe Fluent Icons / Segoe MDL2 Assets path extraction is implemented behind `cfg(windows)` and needs Windows host validation.
-- macOS: SF Symbols backend is planned.
-- Other platforms: unsupported until a platform backend is added.
-
-Use `getSymbols` for batch requests. Both Rust and JavaScript layers cache
-resolved symbols to reduce repeated Tauri command and font extraction overhead.
+- macOS: `get_sf_symbols` command and platform boundary exist; SF Symbols vector extraction is still pending.
+- Other platforms: unsupported.
 
 ## References
 

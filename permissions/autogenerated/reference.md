@@ -4,8 +4,8 @@ Default permissions for system symbol lookup.
 
 #### This default permission set includes the following:
 
-- `allow-get-symbol`
-- `allow-get-symbols`
+- `allow-get-fluent-icons`
+- `allow-get-sf-symbols`
 
 ## Permission Table
 
@@ -19,25 +19,12 @@ Default permissions for system symbol lookup.
 <tr>
 <td>
 
-`system-symbols:allow-get-symbol`
+`system-symbols:allow-get-fluent-icons`
 
 </td>
 <td>
 
-Enables the get_symbol command without any pre-configured scope.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
-`system-symbols:deny-get-symbol`
-
-</td>
-<td>
-
-Denies the get_symbol command without any pre-configured scope.
+Enables the get_fluent_icons command without any pre-configured scope.
 
 </td>
 </tr>
@@ -45,12 +32,12 @@ Denies the get_symbol command without any pre-configured scope.
 <tr>
 <td>
 
-`system-symbols:allow-get-symbols`
+`system-symbols:deny-get-fluent-icons`
 
 </td>
 <td>
 
-Enables the get_symbols command without any pre-configured scope.
+Denies the get_fluent_icons command without any pre-configured scope.
 
 </td>
 </tr>
@@ -58,12 +45,25 @@ Enables the get_symbols command without any pre-configured scope.
 <tr>
 <td>
 
-`system-symbols:deny-get-symbols`
+`system-symbols:allow-get-sf-symbols`
 
 </td>
 <td>
 
-Denies the get_symbols command without any pre-configured scope.
+Enables the get_sf_symbols command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`system-symbols:deny-get-sf-symbols`
+
+</td>
+<td>
+
+Denies the get_sf_symbols command without any pre-configured scope.
 
 </td>
 </tr>
