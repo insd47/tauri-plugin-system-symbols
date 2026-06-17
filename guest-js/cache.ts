@@ -1,13 +1,13 @@
-import type { Symbol } from './types';
+import { Path } from './types';
 
-const resolved = new Map<string, Symbol>();
-const pending = new Map<string, Promise<Symbol>>();
+const resolved = new Map<string, Path[]>();
+const pending = new Map<string, Promise<Path[]>>();
 
-export function get(key: string): Symbol | undefined {
+export function get(key: string): Path[] | undefined {
   return resolved.get(key);
 }
 
-export function load(key: string, create: () => Promise<Symbol>): Promise<Symbol> {
+export function load(key: string, create: () => Promise<Path[]>): Promise<Path[]> {
   const cached = resolved.get(key);
   if (cached) return Promise.resolve(cached);
 

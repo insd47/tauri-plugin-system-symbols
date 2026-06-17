@@ -4,7 +4,7 @@
 //! symbol extraction behind `platform` modules.
 
 pub use error::{Error, Result};
-pub use models::{FillRule, Path, Symbol};
+pub use models::{FillRule, Path};
 use tauri::{
     plugin::{Builder, TauriPlugin},
     Runtime,
@@ -26,6 +26,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 ///
 /// On Windows, the value is resolved as a Segoe Fluent Icons glyph or
 /// codepoint. On macOS, the value is resolved as an SF Symbol name.
-pub fn get_symbol(symbol: impl AsRef<str>, size: f32) -> Result<Symbol> {
+pub fn get_symbol(symbol: impl AsRef<str>, size: f32) -> Result<Vec<Path>> {
     platform::resolve_symbol(symbol.as_ref(), size)
 }

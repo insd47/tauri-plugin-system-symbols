@@ -1,5 +1,4 @@
-import type { Symbol } from './types';
-
+import type { Path } from './types';
 import * as cache from './cache';
 import * as commands from './commands';
 import * as dimensions from './size';
@@ -13,9 +12,9 @@ import * as text from './text';
  *
  * @param symbol Platform-specific symbol name, glyph, or codepoint.
  * @param size Target icon size in CSS pixels.
- * @returns SVG path data and viewBox metadata for the requested symbol.
+ * @returns SVG path data for the requested symbol.
  */
-export function getSymbol(symbol: string, size: number): Promise<Symbol> {
+export function getSymbol(symbol: string, size: number): Promise<Path[]> {
   text.assert(symbol, 'symbol');
   dimensions.assert(size);
 
@@ -27,9 +26,9 @@ export function getSymbol(symbol: string, size: number): Promise<Symbol> {
  *
  * @param symbol Platform-specific symbol name, glyph, or codepoint.
  * @param size Target icon size in CSS pixels.
- * @returns Cached SVG data, or `undefined` when the symbol has not been loaded.
+ * @returns Cached SVG path data, or `undefined` when the symbol has not been loaded.
  */
-export function getCachedSymbol(symbol: string, size: number): Symbol | undefined {
+export function getCachedSymbol(symbol: string, size: number): Path[] | undefined {
   text.assert(symbol, 'symbol');
   dimensions.assert(size);
   return cache.get(dimensions.key(symbol, size));
@@ -42,4 +41,4 @@ export function clearSymbolCache(): void {
   cache.clear();
 }
 
-export type { Path, Symbol } from './types';
+export type { Path } from './types';

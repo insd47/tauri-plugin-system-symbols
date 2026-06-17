@@ -2,22 +2,19 @@ mod font;
 mod outline;
 mod path;
 
-use crate::models::{Path, Symbol};
+use crate::models::Path;
 
-pub(crate) fn resolve(icon: &str, size: f32) -> crate::Result<Symbol> {
+pub(crate) fn resolve(icon: &str, size: f32) -> crate::Result<Vec<Path>> {
     let codepoint = parse_codepoint(icon)?;
     let (face, glyph_index) = font::resolve(codepoint)?;
     let segments = outline::extract(&face, glyph_index, size)?;
     let d = path::to_path(&segments, size);
 
-    Ok(Symbol {
-        view_box: format!("0 0 {0} {0}", size),
-        paths: vec![Path {
-            d,
-            fill_rule: None,
-            opacity: None,
-        }],
-    })
+    Ok(vec![Path {
+        d,
+        fill_rule: None,
+        opacity: None,
+    }])
 }
 
 fn parse_codepoint(symbol: &str) -> crate::Result<u32> {

@@ -1,11 +1,11 @@
-use crate::{models::Symbol, Error};
+use crate::{models::Path, Error};
 
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
-pub(crate) fn resolve_symbol(symbol: &str, size: f32) -> crate::Result<Symbol> {
+pub(crate) fn resolve_symbol(symbol: &str, size: f32) -> crate::Result<Vec<Path>> {
     if symbol.trim().is_empty() {
         return Err(Error::InvalidRequest("symbol must not be empty".into()));
     }
