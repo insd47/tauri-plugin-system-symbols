@@ -1,5 +1,8 @@
 # tauri-plugin-system-symbols
 
+<img width="495" height="425" alt="winsows" src="https://github.com/user-attachments/assets/fd6ad310-66fe-4adc-a416-b13ee37f4516" />
+<img width="495" height="425" alt="macos" src="https://github.com/user-attachments/assets/0347854a-27bb-413f-963a-46fb05755011" />
+
 Resolve platform system symbols into SVG path data from a Tauri app.
 
 This plugin is designed for apps that want native-looking symbols without
