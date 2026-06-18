@@ -9,7 +9,6 @@ bundling icon fonts or SVG assets.
 
 - Rust crate: [`tauri-plugin-system-symbols`](https://github.com/insd47/tauri-plugin-system-symbols)
 - JavaScript package: [`tauri-plugin-system-symbols`](https://github.com/insd47/tauri-plugin-system-symbols)
-- React package: [`tauri-plugin-system-symbols-react`](https://github.com/insd47/tauri-plugin-system-symbols-react)
 
 ## Status
 
@@ -42,8 +41,11 @@ pnpm add tauri-plugin-system-symbols
 Register the plugin:
 
 ```rust
-tauri::Builder::default()
+pub fn run() {
+  tauri::Builder::default()
     .plugin(tauri_plugin_system_symbols::init());
+    ...
+}
 ```
 
 Add the default permission to your capability file:
@@ -57,10 +59,10 @@ Add the default permission to your capability file:
 ## JavaScript API
 
 ```ts
-import { getCachedSymbol, getSymbol } from 'tauri-plugin-system-symbols'
+import { getCachedSymbol, getSymbol } from 'tauri-plugin-system-symbols';
 
-const close = getCachedSymbol('\uE8BB', 10) ?? await getSymbol('\uE8BB', 10)
-const history = await getSymbol('􂰵', 16) // square.and.arrow.down.badge.clock
+const close = getCachedSymbol('\uE8BB', 10) ?? (await getSymbol('\uE8BB', 10));
+const history = await getSymbol('􂰵', 16); // square.and.arrow.down.badge.clock
 ```
 
 Tauri IPC is asynchronous, so first-time symbol resolution returns a `Promise<Path[]>`.
@@ -72,8 +74,10 @@ Other Rust crates can call the native resolvers directly without registering
 this crate as a Tauri plugin:
 
 ```rust
-let close = tauri_plugin_system_symbols::get_symbol("\u{E8BB}", 10.0)?;
-let history = tauri_plugin_system_symbols::get_symbol("􂰵", 16.0)?; // square.and.arrow.down.badge.clock
+use tauri_plugin_system_symbols;
+
+let close = get_symbol("\u{E8BB}", 10.0)?;
+let history = get_symbol("􂰵", 16.0)?; // square.and.arrow.down.badge.clock
 ```
 
 This is the recommended integration path when another Tauri plugin only needs
@@ -84,19 +88,71 @@ current operating system.
 
 ```ts
 interface Path {
-  d: string
-  fillRule?: 'nonzero' | 'evenodd'
-  opacity?: number
+  d: string;
+  fillRule?: 'nonzero' | 'evenodd';
+  opacity?: number;
 }
 ```
 
 ## React
 
-React components are provided by
-[`tauri-plugin-system-symbols-react`](https://github.com/insd47/tauri-plugin-system-symbols-react).
+There is no separate React package. If you want a component, keep one in your app:
 
 ```sh
-pnpm add tauri-plugin-system-symbols-react @tauri-apps/plugin-os
+pnpm add @tauri-apps/plugin-os
+```
+
+```tsx
+import { platform } from '@tauri-apps/plugin-os';
+import { type ComponentProps, useLayoutEffect, useState } from 'react';
+import { getCachedSymbol, getSymbol } from 'tauri-plugin-system-symbols';
+
+/**
+ * Renders a platform system symbol as an SVG.
+ *
+ * @param macos SF Symbols name used when `platform()` is `"macos"`.
+ * @param windows Segoe glyph used when `platform()` is `"windows"`.
+ * @param size Target icon size in CSS pixels. Defaults to `16`.
+ * @param props
+ */
+export default function Symbol({ macos, windows, size, ...props }: Props) {
+  const key = platform() === 'macos' ? macos : windows;
+  const [current, setCurrent] = useState(() => ({ key, size, path: getCachedSymbol(key, size) }));
+
+  useLayoutEffect(() => {
+    if (current.key === key && current.size === size && current.path) return;
+    let active = true;
+
+    getSymbol(key, size).then((path) => {
+      if (active) setCurrent({ key, size, path });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [key, size]);
+
+  return (
+    <svg
+      fill="currentColor"
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      width={size}
+      data-symbol={key}
+      {...props}
+    >
+      {current.path?.map((props, index) => (
+        <path key={index} {...props} />
+      ))}
+    </svg>
+  );
+}
+
+interface Props extends ComponentProps<'svg'> {
+  macos: string;
+  windows: string;
+  size: number;
+}
 ```
 
 ## Development
