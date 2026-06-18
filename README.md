@@ -14,16 +14,14 @@ bundling icon fonts or SVG assets.
 ## Status
 
 - Windows: `Segoe Fluent Icons` is resolved first, with `Segoe MDL2 Assets` as the fallback.
-- macOS: `SF Symbols` are resolved through AppKit and converted from `NSBezierPath` to SVG path data.
+- macOS: copied `SF Symbols` characters are resolved through CoreText and converted from `CGPath` to SVG path data.
 - Other platforms: unsupported.
 
 Calling the resolver on an unsupported platform rejects with a Rust backend error.
 
-The macOS backend uses AppKit's public `NSImage(systemSymbolName:)` resolver,
-then reads the returned symbol representation through the undocumented
-`NSSymbolImageRep.outlinePath` selector. This is intentional for native SF
-Symbols path extraction, but it is not a public Apple API contract and should
-not be treated as App Store-safe.
+On macOS, pass the character produced by SF Symbols' `Copy Symbol` command,
+not the symbol name. For example, `􂰵` is the copied character for
+`square.and.arrow.down.badge.clock`.
 
 ## Install
 
@@ -32,7 +30,7 @@ Install the Rust plugin in your Tauri app:
 ```toml
 # src-tauri/Cargo.toml
 [dependencies]
-tauri-plugin-system-symbols = "0.1"
+tauri-plugin-system-symbols = "0.3"
 ```
 
 Install the JavaScript package:
@@ -62,10 +60,10 @@ Add the default permission to your capability file:
 import { getCachedSymbol, getSymbol } from 'tauri-plugin-system-symbols'
 
 const close = getCachedSymbol('\uE8BB', 10) ?? await getSymbol('\uE8BB', 10)
-const share = await getSymbol('square.and.arrow.up', 16)
+const history = await getSymbol('􂰵', 16) // square.and.arrow.down.badge.clock
 ```
 
-Tauri IPC is asynchronous, so first-time symbol resolution returns a `Promise<Symbol>`.
+Tauri IPC is asynchronous, so first-time symbol resolution returns a `Promise<Path[]>`.
 Resolved symbols are cached by symbol and size.
 
 ## Rust API
@@ -75,7 +73,7 @@ this crate as a Tauri plugin:
 
 ```rust
 let close = tauri_plugin_system_symbols::get_symbol("\u{E8BB}", 10.0)?;
-let share = tauri_plugin_system_symbols::get_symbol("square.and.arrow.up", 16.0)?;
+let history = tauri_plugin_system_symbols::get_symbol("􂰵", 16.0)?; // square.and.arrow.down.badge.clock
 ```
 
 This is the recommended integration path when another Tauri plugin only needs
@@ -85,11 +83,6 @@ current operating system.
 ## Types
 
 ```ts
-interface Symbol {
-  viewBox: string
-  paths: Path[]
-}
-
 interface Path {
   d: string
   fillRule?: 'nonzero' | 'evenodd'

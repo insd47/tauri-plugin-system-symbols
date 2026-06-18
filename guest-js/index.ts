@@ -8,9 +8,9 @@ import * as text from './text';
  * Resolves one platform system symbol to SVG path data.
  *
  * On Windows, the value is resolved as a Segoe Fluent Icons glyph or
- * codepoint. On macOS, the value is resolved as an SF Symbol name.
+ * codepoint. On macOS, the value is resolved as a copied SF Symbol character.
  *
- * @param symbol Platform-specific symbol name, glyph, or codepoint.
+ * @param symbol Platform-specific symbol character, glyph, or codepoint.
  * @param size Target icon size in CSS pixels.
  * @returns SVG path data for the requested symbol.
  */
@@ -24,7 +24,7 @@ export function getSymbol(symbol: string, size: number): Promise<Path[]> {
 /**
  * Returns a previously resolved platform symbol without starting IPC.
  *
- * @param symbol Platform-specific symbol name, glyph, or codepoint.
+ * @param symbol Platform-specific symbol character, glyph, or codepoint.
  * @param size Target icon size in CSS pixels.
  * @returns Cached SVG path data, or `undefined` when the symbol has not been loaded.
  */

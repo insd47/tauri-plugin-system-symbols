@@ -1,47 +1,66 @@
-use objc2::{
-    class, msg_send,
-    rc::Retained,
-    runtime::{AnyObject, NSObjectProtocol},
-    sel,
-};
-use objc2_app_kit::{NSBezierPath, NSImage, NSImageRep};
-use objc2_foundation::NSString;
+use std::{ptr, ptr::NonNull};
 
-use crate::Error;
+use objc2_core_foundation::{CFRange, CFRetained, CFString};
+use objc2_core_graphics::{CGGlyph, CGPath};
+use objc2_core_text::CTFont;
 
-pub(super) fn extract(symbol: &str, size: f64) -> crate::Result<Retained<NSBezierPath>> {
-    let name = NSString::from_str(symbol);
-    let image = NSImage::imageWithSystemSymbolName_accessibilityDescription(&name, None)
-        .ok_or_else(|| Error::Symbol(format!("SF Symbol `{symbol}` was not found")))?;
-    let image = configure(&image, size).unwrap_or(image);
-    let representations = image.representations();
-    let representation = representations.firstObject().ok_or_else(|| {
-        Error::Symbol(format!("SF Symbol `{symbol}` has no image representation"))
-    })?;
+use crate::{Error, Result};
 
-    path(&representation, symbol)
-}
+const FAMILIES: [&str; 4] = ["SF Pro", "SF Compact", "Apple Symbols", "Helvetica"];
 
-fn configure(image: &NSImage, size: f64) -> Option<Retained<NSImage>> {
-    let configuration: Option<Retained<AnyObject>> = unsafe {
-        msg_send![
-            class!(NSImageSymbolConfiguration),
-            configurationWithPointSize: size,
-            weight: 0.0f64
-        ]
-    };
-    let configuration = configuration?;
-
-    unsafe { msg_send![image, imageWithSymbolConfiguration: &*configuration] }
-}
-
-fn path(representation: &NSImageRep, symbol: &str) -> crate::Result<Retained<NSBezierPath>> {
-    if !representation.respondsToSelector(sel!(outlinePath)) {
+pub(super) fn extract(symbol: &str, size: f64) -> Result<CFRetained<CGPath>> {
+    let characters: Vec<u16> = symbol.encode_utf16().collect();
+    if symbol.chars().count() != 1 {
         return Err(Error::Symbol(
-            "SF Symbols path extraction is unavailable on this macOS version".into(),
+            "macOS SF Symbols must be passed as a copied symbol character".into(),
         ));
     }
 
-    let path: Option<Retained<NSBezierPath>> = unsafe { msg_send![representation, outlinePath] };
-    path.ok_or_else(|| Error::Symbol(format!("SF Symbol `{symbol}` has no outline path")))
+    let text = CFString::from_str(symbol);
+    let range = CFRange::new(0, characters.len() as isize);
+
+    for family in FAMILIES {
+        let name = CFString::from_str(family);
+        let base = unsafe { CTFont::with_name(&name, size, ptr::null()) };
+        let font = unsafe { base.for_string(&text, range) };
+        if let Some(path) = path(&font, &characters) {
+            return Ok(path);
+        }
+
+        if let Some(path) = path(&base, &characters) {
+            return Ok(path);
+        }
+    }
+
+    Err(Error::Symbol(format!(
+        "SF Symbol character `{symbol}` was not found in available fonts"
+    )))
+}
+
+fn path(font: &CTFont, characters: &[u16]) -> Option<CFRetained<CGPath>> {
+    let glyph = glyph(font, characters)?;
+    unsafe { font.path_for_glyph(glyph, ptr::null()) }
+}
+
+fn glyph(font: &CTFont, characters: &[u16]) -> Option<CGGlyph> {
+    let mut glyphs = vec![0; characters.len()];
+    unsafe {
+        font.glyphs_for_characters(
+            NonNull::new(characters.as_ptr() as *mut u16)?,
+            NonNull::new(glyphs.as_mut_ptr())?,
+            characters.len() as isize,
+        );
+    }
+
+    glyphs.into_iter().find(|glyph| *glyph != 0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_symbol_names() {
+        assert!(extract("square.and.arrow.up", 16.0).is_err());
+    }
 }

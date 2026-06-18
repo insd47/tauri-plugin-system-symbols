@@ -25,7 +25,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 /// Resolves one platform system symbol into SVG path data.
 ///
 /// On Windows, the value is resolved as a Segoe Fluent Icons glyph or
-/// codepoint. On macOS, the value is resolved as an SF Symbol name.
+/// codepoint. On macOS, the value is resolved as a copied SF Symbol character.
 pub fn get_symbol(symbol: impl AsRef<str>, size: f32) -> Result<Vec<Path>> {
     platform::resolve_symbol(symbol.as_ref(), size)
 }

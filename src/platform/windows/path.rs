@@ -87,6 +87,9 @@ mod tests {
             Segment::Line(20.0, 20.0),
             Segment::Close,
         ];
-        assert_eq!(to_path(&segments, 16.0), "M0.00 0.00L16.00 0.00L16.00 16.00Z");
+        assert_eq!(
+            to_path(&segments, 16.0),
+            "M0.00 0.00L16.00 0.00L16.00 16.00Z"
+        );
     }
 }
